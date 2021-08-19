@@ -1,0 +1,13 @@
+1. 如何使用nsenter来抓包呢？
+
+获取容器进程id，即PID
+docker ps | grep xxx 获取容器id/name
+docker inspect --format "{{.State.Pid}}" container_id/name 获取PID
+使用nsenter切换网络命名空间
+nsenter -n -t container_id/name
+可在切换前后执行ifconfig来对比变化
+现在就已进入容器的网络命名空间，就可以使用宿主机上的tcpdump来对容器进行抓包了
+
+
+
+2. 根据容器id获取网卡编号，找到对应的虚拟网卡。
