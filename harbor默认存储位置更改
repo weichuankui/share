@@ -1,0 +1,4 @@
+将原存储目录备份并复制到新目录。
+更改harbor.cfg 和docker-compose.yaml 里面的data目录，替换为新目录。
+docker-compose stop 
+docker-compose start
