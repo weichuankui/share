@@ -1,3 +1,4 @@
+适用于修改cgroupfs或者systemd驱动
 1、修改docker的Cgroup Driver
 修改/etc/docker/daemon.json文件
 
@@ -20,6 +21,4 @@ Environment="KUBELET_KUBECONFIG_ARGS=--bootstrap-kubeconfig=/etc/kubernetes/boot
 
 systemctl daemon-reload
 systemctl restart kubelet
-————————————————
-版权声明：本文为CSDN博主「Andriy_dangli」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
-原文链接：https://blog.csdn.net/Andriy_dangli/article/details/85062983
+
