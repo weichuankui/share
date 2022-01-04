@@ -1,0 +1,9 @@
+方法如下：
+
+1：确认MySQL数据库存储目录
+
+[root@DB-Server tmp]# mysqladmin -u root -p variables | grep datadir
+  
+Enter password: 
+  
+| datadir | /var/lib/mysql/
