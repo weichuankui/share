@@ -1,0 +1,9 @@
+使用elasticsearch进行深度分页查询时的size-from大于10000的时候，会提示一个max_result_window is too large的错误。
+官方推荐是scroll查询返回结果是无序的不满足业务需求,所以还是通过设置最大返回结果数来达到我们的目的
+然后我们可以通过以下方法设置：node settings must not contain any index level settings
+第一种：
+curl -H "Content-Type: application/json" -XPUT 'http://127.0.0.1:9200/_all/_settings?preserve_existing=true' -d '{
+  "index.max_result_window" : "1000000000"
+}'
+或者
+curl -H "Content-Type: application/json" -XPUT http://127.0.0.1:9200/_settings -d '{ "index" : { "max_result_window" : 100000000}}'
