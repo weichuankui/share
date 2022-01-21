@@ -1,0 +1,88 @@
+说明：
+
+开启MySQL binlog日志的服务器，如果不设置自动清理日志，默认binlog日志一直保留着，时间一长，服务器磁盘空间被binlog日志占满，导致MySQL数据库出错。
+
+使用下面方法可以安全清理binlog日志
+
+一、没有主从同步的情况下清理日志
+
+mysql -uroot -p123456 -e 'PURGE MASTER LOGS BEFORE DATE_SUB( NOW( ),INTERVAL 5 DAY)';
+
+#mysql 定时清理5天前的binlog
+
+mysql -u root -p  #进入mysql 控制台
+
+reset master;  #重置binlog
+
+二、MySQL主从同步下安全清理binlog日志
+
+1、mysql  -u root -p   #进入从服务器mysql控制台
+
+show slave status\G;   #检查从服务器正在读取哪个日志，有多个从服务器，选择时间最早的一个做为目标日志。
+
+2、进入主服务器mysql控制台
+
+show master log;   #获得主服务器上的一系列日志
+
+PURGE MASTER LOGS TO 'binlog.000058';   #删除binlog.000005之前的，不包括binlog.000058
+
+PURGE MASTER LOGS BEFORE '2016-06-22 13:00:00';  #清除2016-06-22 13:00:00前binlog日志
+
+PURGE MASTER LOGS BEFORE DATE_SUB( NOW( ), INTERVAL 3 DAY);  #清除3天前binlog日志
+
+三、设置自动清理MySQL binlog日志
+
+vi  /etc/my.cnf  #编辑配置
+
+expire_logs_days = 15  #自动删除15天前的日志。默认值为0，表示从不删除。
+
+log-bin=mysql-bin   #注释掉之后，会关闭binlog日志
+
+binlog_format=mixed   #注释掉之后，会关闭binlog日志
+
+:wq!  #保存退出
+
+扩展阅读：
+
+mysql> help purge;
+
+Name: 'PURGE BINARY LOGS'
+
+Description:
+
+Syntax:
+
+PURGE { BINARY | MASTER } LOGS
+
+{ TO 'log_name' | BEFORE datetime_expr }
+
+The binary log is a set of files that contain information about data
+
+modifications made by the MySQL server. The log consists of a set of
+
+binary log files, plus an index file (see
+
+http://dev.mysql.com/doc/refman/5.5/en/binary-log.html).
+
+The PURGE BINARY LOGS statement deletes all the binary log files listed
+
+in the log index file prior to the specified log file name or date.
+
+BINARY and MASTER are synonyms. Deleted log files also are removed from
+
+the list recorded in the index file, so that the given log file becomes
+
+the first in the list.
+
+This statement has no effect if the server was not started with the
+
+--log-bin option to enable binary logging.
+
+URL: http://dev.mysql.com/doc/refman/5.5/en/purge-binary-logs.html
+
+Examples:
+
+PURGE BINARY LOGS TO 'mysql-bin.010';
+
+PURGE BINARY LOGS BEFORE '2008-04-02 22:46:26';
+
