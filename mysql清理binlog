@@ -22,7 +22,7 @@ show slave status\G;   #检查从服务器正在读取哪个日志，有多个�
 
 2、进入主服务器mysql控制台
 
-show master log;   #获得主服务器上的一系列日志
+show master logs;   #获得主服务器上的一系列日志
 
 PURGE MASTER LOGS TO 'binlog.000058';   #删除binlog.000005之前的，不包括binlog.000058
 
