@@ -1,0 +1,16 @@
+[root@simtest-v1-12-5fdfd75f9f-lxscd sim]# ls -lh /sim/tomcat9_sim/logs/catalina.out*
+-rw-r----- 1 root root 1.3G Feb  8 08:02 /sim/tomcat9_sim/logs/catalina.out
+-rw-r--r-- 1 root root 7.3G Feb  8 09:49 /sim/tomcat9_sim/logs/catalina.out1
+[root@simtest-v1-12-5fdfd75f9f-lxscd sim]# ps -ef 
+UID         PID   PPID  C STIME TTY          TIME CMD
+root          1      0  0 Jan28 ?        00:00:00 /bin/bash ./start_sim.sh
+root          6      1  0 Jan28 ?        00:02:10 ./filebeat -c filebeat.yml -e
+root         22      1  2 Jan28 ?        07:30:45 /sim/openjdk11/bin/java -Djava.util.logging.config.file=/sim/tomcat9_sim/conf/logging.properties -Djava.util.logging.manager=org.apac
+root         23      1  0 Jan28 ?        00:00:34 tail -fn200 ../logs/catalina.out
+root      20390      0  0 09:46 pts/0    00:00:00 bash
+root      20416      0  0 09:49 pts/1    00:00:00 bash
+root      20463      0  0 10:07 pts/2    00:00:00 bash
+root      20487  20463  0 10:09 pts/2    00:00:00 ps -ef
+今天碰到一个xx平台 统计pod的时候，把内存的rss和cache合并显示了，导致用户看起来疑似产生了内存溢出。
+实际上把tail 作为了一个常驻进程，导致tail 文件的时候，会占用cache，日志越大，占用cache越多。与java内存溢出很像。
+
