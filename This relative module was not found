@@ -5,3 +5,4 @@ This relative module was not found:
 * ../../assets/images/A.png in ./node_modules/cache-loader/dist/cjs.js?{"cacheDirectory":"node_modules/.cache/vue-loader","cacheIdentifier":"965954c8-vue-loader-template"}!./node_modules/vue-loader/lib/loaders/templateLoader.js??vue-loader-options!./node_modules/cache-loader/dist/cjs.js??ref--1-0!./node_modules/vue-loader/lib??vue-loader-options!./src/views/invoice-status/invoice-status-list.vue?vue&type=template&id=d1524ff6&scoped=true&
  ERROR  Build failed with errors.
 error Command failed with exit code 1.
+原因：开发路径书写错误。
