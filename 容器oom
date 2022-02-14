@@ -1,2 +1,7 @@
 容器oom报错导致network io timeout。日志不连续。
 pod存在，底层容器重启。
+k8s容器 pod OOM, exit code:137
+容器OOM是因为容器占用内存超过了配置里内存的limit设置，导致容器服务把容器kill掉了，对与服务而言这时还是正常的，自然不会dump 日志了。理解了这层含义后，大致猜测jvm内存设置不合理，运行期间堆内存逐渐增大，jvm最大内存还没到，但是已经达到了容器内存的最大限制，然后容器被kill掉了。
+————————————————
+版权声明：本文为CSDN博主「feichen2016」的原创文章，遵循CC 4.0 BY-SA版权协议，转载请附上原文出处链接及本声明。
+原文链接：https://blog.csdn.net/feichen2016/article/details/109450597
