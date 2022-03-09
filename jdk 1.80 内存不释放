@@ -1,0 +1,6 @@
+0
+
+Java usually allocates memory that has previously reserved, it only frees it when you restart the process. You can see this post that gives the full explanation.
+
+java.exe process uses more memory and does not free it up
+
