@@ -4,3 +4,15 @@ Java usually allocates memory that has previously reserved, it only frees it whe
 
 java.exe process uses more memory and does not free it up
 
+
+14
+
+This is normal, don't worry. JVM acquires memory when it needs to execute some complex logic. When java is done processing the tasks the JVM will still keep that memory as a reserved space and is not released back to the OS. This architecture helps in performance because JMV does not have to request the same memory again from the underlying OS. It will still be within the range you define in -Xmx JVM parameter.
+
+See this IBM link for some interesting details. http://www-01.ibm.com/support/docview.wss?uid=swg21326774
+
+Unfortunately this is one of the grey areas of JVM; you really don't have much of a control on how OS and JVM share memory between each other. Think of JVM as a Virtual OS that requires some memory to run. Both your parent OS and the VM are hungry for resources and want to hang on to the acquired resources the as much memory as possible. Requesting for more memory from OS is a time consuming operation so most of the JVMs do not release the memory back to the OS even when they don't need it anymore.
+
+See this white paper from Oracle for more details on internal JVM memory management. http://www.oracle.com/technetwork/java/javase/memorymanagement-whitepaper-150215.pdf
+
+I would suggest you to read the IBM link first and then you can delve into the weird world of memory explained in the white paper. Both of these links are very informative and interesting.
