@@ -1,0 +1,2 @@
+客户端不发送TCP SYN 握手请求：established 请求过多，导致SYN 请求无法发送。
+服务端不回复ACK请求： 服务端开启了syn_recycle 参数，导致在NAT环境下，请求被丢弃。
