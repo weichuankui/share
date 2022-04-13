@@ -1,0 +1,2 @@
+kubernets 主机网络模式与dns策略
+主机网络模式下采用clusterFirst 导致使用主机DNS，造成kubernets集群内的servicename无法解析。
