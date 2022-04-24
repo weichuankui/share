@@ -1,0 +1,45 @@
+Why does the SNMP System Uptime sensor report wrong values?
+https://kb.paessler.com/en/topic/61249-why-does-the-snmp-system-uptime-sensor-report-wrong-values#:~:text=The%20real%20uptime%20of%20a%20device%20is%20153,this%20case%3A%2049.7%20%2A%203%20%3D%20149.1%20days
+This article applies to PRTG Network Monitor 19 or later
+
+Incorrect system uptime via SNMP
+The SNMP System Uptime sensor monitors the time a device is running. For this purpose, PRTG queries the data from the device via Simple Network Management Protocol (SNMP) and uses specific Object Identifiers (OIDs) to get the corresponding values. For a general introduction, see How do SNMP, MIBs and OIDs work?
+
+There are two possible OIDs to query uptime data from a device via SNMP:
+
+HOST-RESOURCES-MIB::hrSystemUptime (1.3.6.1.2.1.25.1.1.0)
+DISMAN-EVENT-MIB::sysUpTimeInstance (1.3.6.1.2.1.1.3.0)
+The sensor queries hrSystemUptime if available and uses sysUpTimeInstance as fallback, so the SNMP System Uptime sensor usually reports the correct uptime value. However, in specific cases, PRTG reports an uptime that is lower than the real uptime of the monitored device.
+
+There are two possible reasons for this:
+
+1. Wrong uptime values because of 32-bit counters
+Both OIDs that the sensor can query for system uptime are 32-bit counters. This means that the maximum value that these counters can have is 2^32 (2 to the power of 32), which is the integer 4294967296. Because the returned uptime value is given in hundreds of seconds (1/100), the maximum possible uptime that the sensor can display is 497 days (which is 4294967296 hundreds of seconds). If the uptime exceeds this value, that is, the monitored device runs longer than 497 days, the counter resets to 0 and, from this time on, PRTG will show uptime values that are lower than they actually are.
+
+This calculation applies to all network hardware devices, for example, switches or routers. Unfortunately, the behavior on Windows systems is different.
+
+2. Wrong uptime values on Windows systems
+If you use the SNMP System Uptime sensor on Windows systems, you might encounter the issue that the uptime value resets to zero not only every 497 days but more often.
+
+Windows returns the uptime value of the default hrSystemUptime counter in thousands of seconds (1/1000). So, considering the calculation for 32-bit counters above, the maximum uptime that the SNMP System Uptime sensor can show on Windows is 49.7 days. It resets to 0 if the uptime exceeds this value.
+
+The fallback counter sysUpTimeInstance that would return the values in hundreds of seconds is not used on Windows systems because the default counter is usually available.
+
+Example
+Consider the following case that illustrates this issue:
+
+The real uptime of a device is 153 days, 14 hours.
+The SNMP System Uptime sensor in PRTG shows the value 4 days, 11 hours.
+The maximum uptime value that PRTG can show is 49.7, so the value has exceeded the maximum three times in this case: 49.7 * 3 = 149.1 days
+The value that PRTG shows added to the “exceeding times product” is the real uptime: 149.1 days + (4 days, 11 hours) = (153 days, 14 hours)
+Workaround
+You have two workaround options to get the correct system uptime value on Windows systems:
+
+Use the Windows System Uptime sensor on Windows systems. This sensor type can even show uptime values that exceed 497 days.
+Create an SNMP Custom sensor if you want to avoid using WMI and to avoid the default hrSystemUptime counter of the SNMP System Uptime sensor (that can show a maximum of only 49.7 days on Windows):
+Query the OID 1.3.6.1.2.1.1.3.0 (sysUpTimeInstance). This is only the fallback of the standard SNMP System Uptime sensor but can show values up to 497 days on Windows as well.
+For display purposes, calculate the number of uptime days by dividing the retrieved value (that comes in hundreds of seconds) by 8640000. Enter this number in the Division field of the sensor settings.
+Note: Of course, you can also display the value not only in days, but also in any other time unit. Adjust the calculation to get the desired division for the sensor value: The calculation to map hundreds of seconds into days is
+retrieved_value / (100 (seconds) * 60 (minutes) * 60 (hours) * 24 (days))
+Note: This counter resets to zero every time the SNMP service on the machine is restarted. This means that the uptime value in the sensor can be different from the real uptime of the monitored device even if there was no restart of the system.
+Note: You will also get a maximum of only 497 days with this sensor type.
