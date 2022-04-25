@@ -1,5 +1,5 @@
 Why does the SNMP System Uptime sensor report wrong values?
-snmpd returns "truncating integer value > 32 bits" after 497 days from boot
+snmpd returns "truncating integer value > 32 bits" after 497 days from boot, or disk usage > 6TB.
 
 https://kb.paessler.com/en/topic/61249-why-does-the-snmp-system-uptime-sensor-report-wrong-values#:~:text=The%20real%20uptime%20of%20a%20device%20is%20153,this%20case%3A%2049.7%20%2A%203%20%3D%20149.1%20days
 This article applies to PRTG Network Monitor 19 or later
