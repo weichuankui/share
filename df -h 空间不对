@@ -1,0 +1,4 @@
+文件删除后，进程不释放，需要kill掉进程，或者驱逐pod。
+执行docker restart/kill -9 pid，不生效。
+文件继续占用中。
+
