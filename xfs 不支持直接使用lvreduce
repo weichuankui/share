@@ -1,3 +1,38 @@
 xfs 不支持直接使用lvreduce，
-需要使用xfs_dump 和 xfs_restore 进行恢复。
+需要使用xfsdump 和 xfsrestore 进行恢复。
 如果误操作，使用lvm 的自动备份机制进行还原。
+使用xfsdump –f  /opt/home.dump /home
+xfsrestore –f /opt/home.dump /home
+
+3 Mount the lvm
+sudo mkdir /tmp-test
+sudo mount /dev/pve/root /tmp-test
+4 Backup the XFS partition on LVM using xfsdump
+Warning: If we skip this step, our data will be lost!!!!!!!!!!
+
+The backup data will be saved to a file at specified location, in this case it is “/folder/backup-output.xfsdump”
+
+sudo xfsdump -f /folder/backup-output.xfsdump /tmp-test
+5 Unmount the XFS partition on LVM
+sudo umount /tmp-test
+6 Reduce/Shrink
+Note: Assume the original size of /dev/pve/root is 10G
+
+# Reduce by 5G (10G-5G=Final size 5G)
+sudo lvreduce -L -5G /dev/pve/root
+OR
+sudo lvreduce --size -5G /dev/pve/root
+# Reduce to 5G (Final size = 5G)
+sudo lvreduce -L 5G /dev/pve/root
+OR
+sudo lvreduce --size 5G /dev/pve/root
+Related: How to Create/Find/Resize/Expand/Extend/Increase/Shrink/Decrease/Delete/Remove Mount/Unmount LVM volume/partition etc. on Linux/Debian/Ubuntu/Kali Linux/Fedora etc.
+
+7 Format the partition with XFS filesystem
+(Because we have shrinked the lvm where this XFS partition was resides on, the xfs filesystem was already destroyed, we have to recreate the XFS filesystem)
+
+sudo mkfs.xfs -f /dev/pve/root
+8 Mount the partition again
+sudo mount /dev/pve/root /tmp-test
+9 Restore data
+sudo xfsrestore -f /folder/backup-output.xfsdump /tmp-test
