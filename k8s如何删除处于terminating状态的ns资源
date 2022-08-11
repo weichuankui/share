@@ -1,0 +1,53 @@
+假设你要删掉两个ns资源，发现一直删不了处于terminating状态
+
+首先试一下先把这个ns的所有pod都删掉
+
+kubectl delete pod --all -n istio-system
+还是不行的话，加个参数强制删除
+
+kubectl delete pod --grace-period=0 –force 
+如果依然是卡死状态，就要使用下面的必杀技了
+
+首先生成一个tmp.json文件
+
+ kubectl get namespace <terminating-namespace> -o json >tmp.json
+
+ apiVersion: v1
+ kind: Namespace
+ metadata:
+   creationTimestamp: 2018-11-19T18:48:30Z
+   deletionTimestamp: 2018-11-19T18:59:36Z
+   name: <terminating-namespace>
+   resourceVersion: "1385077"
+   selfLink: /api/v1/namespaces/<terminating-namespace>
+   uid: b50c9ea4-ec2b-11e8-a0be-fa163eeb47a5
+ spec:
+   finalizers:
+   - kubernetes
+ status:
+   phase: Terminating
+然后修改这个json文件，把finalizers的kubernetes删掉
+
+ apiVersion: v1
+ kind: Namespace
+ metadata:
+   creationTimestamp: 2018-11-19T18:48:30Z
+   deletionTimestamp: 2018-11-19T18:59:36Z
+   name: <terminating-namespace>
+   resourceVersion: "1385077"
+   selfLink: /api/v1/namespaces/<terminating-namespace>
+   uid: b50c9ea4-ec2b-11e8-a0be-fa163eeb47a5
+ spec:
+   finalizers:
+   - 
+ status:
+   phase: Terminating
+然后把本机服务暴露在本地端口的8001端口上
+
+kubectl proxy
+
+Starting to serve on 127.0.0.1:8001
+新开一个terminal，把修改后的tmp.json到要删除的ns资源目录下
+
+ curl -k -H "Content-Type: application/json" -X PUT --data-binary @tmp.json http://127.0.0.1:8001/api/v1/namespaces/<terminating-namespace>/finalize
+这样就可以删掉了
