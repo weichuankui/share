@@ -1,0 +1,27 @@
+HTTPS站点使用WebSocket的常见错误及解决方案
+21514 8 0
+　　因为HTTPS是基于SSL依靠证书来验证服务器的身份，并为浏览器和服务器之间的通信加密，所以在HTTPS站点调用某些非SSL验证的资源时浏览器可能会阻止。比如使用ws://***调用websocket服务器或者引入类似http://***.js的js文件等都会报错。这里简述一下连接websocket服务器时的错误及解决方案。当使用ws://连接websocket服务器时会出现类似如下错误：
+
+Mixed Content: The page at '*****' was loaded over HTTPS, but attempted to connect to the insecure WebSocket endpoint 'ws://*****'. This request has been blocked; this endpoint must be available over WSS.
+(anonymous) 
+Uncaught DOMException: Failed to construct 'WebSocket': An insecure WebSocket connection may not be initiated from a page loaded over HTTPS.
+
+如果浏览器不阻止,那在https站点下调用ssl资源才可以，面说一下解决方案:
+
+方案一:假设HTTPS站点使用Nginx服务器，其他服务器也是类似的思路，可以用服务器代理ws服务，可以用nginx的WebSocket proxying，简述一下配置方案
+
+#首先将客户端请求websocket时的地址更改为wss://代理服务器url(代理服务器必须支持https) 例如
+var ws = new WebSocket("wss://www.liminghulian.com/websocket");
+#在代理服务器上的nginx配置文件中的server中增加如下配置项
+location /websocket/ {
+    proxy_pass http://backend;
+    proxy_http_version 1.1;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "upgrade";
+}
+
+#http中增加
+upstream backend{
+   server websocket服务器的ip:端口;
+}
+这样客户端请求的是wss://服务器，通过nginx的WebSocket proxying代理到实际不支持ssl的websocket服务器。
