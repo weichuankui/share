@@ -1,0 +1,193 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+from urllib import parse
+
+import requests
+import json
+import datetime
+import time
+
+
+# login to get the token.
+def get_sessionId():
+    url = 'http://source-test.boe.com.cn/login'
+    body = {'principal': "xxx", 'password': "xxxx"}
+    headers = {
+        "Proxy-Connection": "keep-alive",
+        "Pragma": "no-cache",
+        "User-Agent": "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Safari/537.36",
+        "Accept-Language": "zh-CN,zh;q=0.8,en-US;q=0.6,en;q=0.4",
+        "Referer": "http://xxx/harbor/sign-in?signout=true",
+        "Accept-Charset": "gb2312,gbk;q=0.7,utf-8;q=0.7,*;q=0.7",
+        "Accept": "application/json, text/plain, */*",
+        "Accept-Encoding": "gzip, deflate",
+        "Cache-Control": "max-age=0",
+        "Connection": "keep-alive",
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Host": "xxx",
+        "Upgrade-Insecure-Requests": "1"
+    }
+    response = requests.post(url, headers=headers, data=parse.urlencode(body))
+    cookies = response.headers['Set-Cookie']
+    return cookies
+
+
+# 获取项目列表
+def get_project():
+    url = 'http://xxx/api/projects?page=1&page_size=15'
+    headers = {"Accept": "application/json, text/plain, */*",
+               "Accept-Encoding": "gzip, deflate",
+               "Accept-Language": 'zh-CN,zh;q=0.9',
+               "BsmAjaxHeader": 'true',
+               "Cache-Control": 'no-cache',
+               "Connection": 'keep-alive',
+               "Content-Length": '91',
+               "Content-Type": 'application/json',
+               "Host": 'xxx',
+               "Pragma": 'no-cache',
+               "Referer": 'http://xxx/login',
+               "Cookie": get_sessionId(),
+               "User-Agent": "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (XHTML, like Gecko) "
+                             "Chrome/90.0.4430.72 Safari/537.36 "
+               }
+    response = requests.get(url, headers=headers)
+    data = json.loads(response.text)
+    # 循环遍历所有项目
+    result = []
+    for i in range(len(data)):
+        project_id = data[i]["project_id"]
+        print("checking project " + data[i]["name"])
+        project_name = data[i]["name"]
+        result.append((project_id, project_name))
+        clean_single_project(project_name, project_id)
+    print(result)
+    return result
+
+# 获取项目下repos列表
+def get_repos(project_id):
+    url = 'http://xxx/api/repositories?'
+    params = {'page': 1, 'page_size': 60, "project_id": project_id}
+    headers = {"Accept": "application/json, text/plain, */*",
+               "Accept-Encoding": "gzip, deflate",
+               "Accept-Language": 'zh-CN,zh;q=0.9',
+               "BsmAjaxHeader": 'true',
+               "Cache-Control": 'no-cache',
+               "Connection": 'keep-alive',
+               "Content-Length": '91',
+               "Content-Type": 'application/json',
+               "Host": 'xxx',
+               "Pragma": 'no-cache',
+               "Referer": 'http://xxx/harbor/projects/10/repositories',
+               "Cookie": get_sessionId(),
+               "User-Agent": "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Safari/537.36"
+               }
+    response = requests.get(url, headers=headers, params=parse.urlencode(params))
+    data = json.loads(response.text)
+    repo_list = []
+    for i in range(len(data)):
+        repo_list.append([data[i]["id"], data[i]["name"]])
+    return repo_list
+
+
+# 获取repo下 tag id 与创建时间对应关系，用于根据时间删除页面tag。
+def get_version(repo_name):
+    url = 'http://xxx/api/repositories/' + repo_name + '/tags?'
+    headers = {"Accept": "application/json, text/plain, */*",
+               "Accept-Encoding": "gzip, deflate",
+               "Accept-Language": 'zh-CN,zh;q=0.9',
+               "BsmAjaxHeader": 'true',
+               "Cache-Control": 'no-cache',
+               "Connection": 'keep-alive',
+               "Content-Type": 'application/json',
+               "Host": 'xxx',
+               "Origin": 'xxx',
+               "Pragma": 'no-cache',
+               "Referer": 'http://xxx/harbor/projects/10/repositories/' + repo_name,
+               "User-Agent": "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Safari/537.36",
+               "Cookie": get_sessionId()
+               }
+    params = {'page': 1, 'page_size': 15, "detail": 1}
+    response = requests.get(url, headers=headers, params=parse.urlencode(params))
+    data = json.loads(response.text)
+    tagList = []
+    for i in range(len(data)):
+        tagList.append((data[i]["name"], data[i]["created"][0:10]))
+    if (len(tagList)) >= 10:
+        return tagList
+    # else:
+    #    print(data[i]["name"] + " skipped")
+
+
+# 删除repo tag
+def clean_repo(repo, repo_name):
+    url = 'http://xxx/api/repositories/' + repo + '/tags/' + str(repo_name)
+    headers = {"Accept": "application/json, text/plain, */*",
+               "Accept-Encoding": "gzip, deflate",
+               "Accept-Language": 'zh-CN,zh;q=0.9',
+               "BsmAjaxHeader": 'true',
+               "Cache-Control": 'no-cache',
+               "Connection": 'keep-alive',
+               "Content-Type": 'application/json',
+               "Host": 'xxx',
+               "Origin": 'xxx',
+               "Pragma": 'no-cache',
+               "Referer": 'http://xxx/harbor/projects/10/repositories/' + repo,
+               "User-Agent": "Mozilla/5.0 (Windows NT 6.2; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/90.0.4430.72 Safari/537.36",
+               "Cookie": get_sessionId()
+               }
+    response = requests.delete(url, headers=headers)
+    data = response.status_code
+    print(data)
+    time.sleep(5)
+    print(repo + '/tags/' + str(repo_name) + "has been deleted")
+
+
+# 删除单个项目
+def clean_single_project(project, project_id):
+    global repo_date
+    #project = "fssc"
+    #project_id = 10
+    for r in range(len(get_repos(project_id))):
+        repos_name = get_repos(project_id)[r][1]
+        print('repos_name:' + repos_name)
+        repos_list = get_version(repos_name)
+        if repos_list is None:
+            print(project + " " + repos_name + " skipped")
+        else:
+            print(len(repos_list))
+            print("执行清理镜像repo: " + repos_name)
+            # repos.append((item["versionId"], item["realName"]))
+            tags = []
+            for c in range(len(repos_list)):
+                repo_date = repos_list[c][1]
+                tag_name = repos_list[c][0]
+                tags.append([repo_date, tag_name])
+            tags.sort()
+            for i in range(len(tags) - reserve_num):
+                # print(str(repos_name) + '/' + str(tags[i][1]))
+                print(tags[i][0])
+                if reserve_time >= tags[i][0]:
+                    tag_name = tags[i][1]
+                    #print(str(tags[i][1]) + str(tags[i][0]) + "删除中...")
+                    #clean_repo(repos_name, tag_name)
+                    time.sleep(4.8)
+                    try:
+                        clean_repo(repos_name, tag_name)
+                        #print(repos_name, tag_name)
+                    except IOError:
+                        print("Error: 删除失败")
+                        quit()
+                    else:
+                        print("Succeed: 删除成功")
+                else:
+                    print(repos_name + str(tags[i][1]) + str(tags[i][0]) + "Skipped: 跳过删除")
+
+
+# Press the green button in the gutter to run the script.
+if __name__ == '__main__':
+    reserve_time = '2021-12-30'
+    #repo_date = '2021-12-30'
+    reserve_num = 10
+    get_project()
+    #clean_single_project()
+# get_sessionId()
