@@ -1,0 +1,39 @@
+root@k8s-enterprise-poc-master01:[/opt/ns]kubectl get namespace demo -o json >demo.json
+root@k8s-enterprise-poc-master01:[/opt/ns]vim demo.json
+root@k8s-enterprise-poc-master01:[/opt/ns]curl -k -H "Content-Type: application/json" -X PUT --data-binary @demo.json  http://127.0.0.1:8001/api/v1/namespaces/demo/finalize
+root@k8s-enterprise-poc-master01:[/opt/ns]cat devops.json
+{
+    "apiVersion": "v1",
+    "kind": "Namespace",
+    "metadata": {
+        "annotations": {
+            "applicationCnName": "开发运维管理平台",
+            "kubernetes.customized/bocloud_env_id": "3",
+            "kubernetes.customized/bocloud_env_name": "ops",
+            "kubernetes.customized/bocloud_partition_id": "172",
+            "kubernetes.customized/bocloud_partition_name": "k8s-test-default",
+            "kubernetes.customized/project_creator": "835",
+            "kubernetes.customized/project_id": "29",
+            "kubernetes.customized/tree_application_id": "29"
+        },
+        "creationTimestamp": "2022-06-19T05:38:51Z",
+        "labels": {
+            "app": "devops",
+            "kubernetes.io/metadata.name": "devops"
+        },
+        "name": "devops",
+        "resourceVersion": "57852698",
+        "uid": "ec73a601-6e80-4058-b1ff-cea2701361a0"
+    },
+    "spec": {
+        "finalizers": [
+            "kubernetes"
+        ]
+    },
+    "status": {
+        "phase": "Active"
+    }
+}
+
+
+kubectl proxy --port=8001 &
